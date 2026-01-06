@@ -4,7 +4,7 @@
  */
 
 import { runPrompts, confirmCommit, showSuccess, showError, reviewAiSuggestion, editAiSuggestion, showAiGenerating } from './lib/prompts.js';
-import { buildCommitMessage } from './lib/validator.js';
+import { buildCommitMessage, validateHeaderLength } from './lib/validator.js';
 import { executeCommit, getBranchReference, getStagedDiff } from './lib/commit.js';
 import { isOllamaAvailable, generateCommitMessage } from './lib/ollama.js';
 import * as p from '@clack/prompts';
@@ -51,6 +51,15 @@ async function getCommitData() {
           : refText;
       }
 
+      // Validate header length
+      const headerValidation = validateHeaderLength(commitData);
+      if (!headerValidation.valid) {
+        p.log.warn(
+          `⚠️  Header is too long: ${headerValidation.length}/${headerValidation.limit} characters.\n` +
+          `   Consider editing to shorten the scope or description.`
+        );
+      }
+
       // Build message and show to user
       const message = buildCommitMessage(commitData);
       const action = await reviewAiSuggestion(commitData, message);
@@ -87,6 +96,15 @@ async function main() {
           ? `${commitData.footer}\n${refText}`
           : refText;
       }
+    }
+
+    // Validate header length before building
+    const headerValidation = validateHeaderLength(commitData);
+    if (!headerValidation.valid) {
+      p.log.warn(
+        `⚠️  Header is too long: ${headerValidation.length}/${headerValidation.limit} characters.\n` +
+        `   The commit will likely fail validation. Consider shortening the scope or description.`
+      );
     }
 
     // Build the commit message from the collected data
