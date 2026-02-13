@@ -318,6 +318,30 @@ This tool generates commits that comply with standard commitlint rules:
 - Subject must not end with a period
 - Branch references can be optionally included when prompted
 
+## Privacy & Security
+
+### Your Code Never Leaves Your Machine
+
+Because CCC uses Ollama, all AI processing happens **locally on your device**. Your git diffs, source code, and commit messages are never sent to any external server, cloud API, or third party.
+
+This makes it safe to use on:
+
+- **Private or proprietary codebases** - no risk of code leaking to an AI provider
+- **Client work** - no NDA or confidentiality concerns
+- **Internal tooling** - no exposure of infrastructure details or business logic
+
+### No API Keys or Accounts
+
+There is no API key, account, or subscription required. Once Ollama and a model are installed, everything runs offline and air-gapped if needed.
+
+### What Data Is Used
+
+When AI mode is active, the only data sent to Ollama is the output of `git diff --cached` — the staged diff of the changes you are about to commit. Nothing else is read, stored, or transmitted.
+
+### Network Access
+
+Ollama listens on `http://localhost:11434` by default. All requests from CCC are made to this local address. No outbound network connections are made during commit generation.
+
 ## How It Works
 
 1. **Checks Ollama availability** - Pings `http://localhost:11434`
