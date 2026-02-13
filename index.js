@@ -41,12 +41,15 @@ async function getCommitData(flags, branchRef) {
 
     // Generate commit with AI
     let commitData;
+    const publishableTypeValues = PUBLISHABLE_TYPES.map(t => t.value);
+    const generateOptions = flags.publish ? { allowedTypes: publishableTypeValues } : {};
+
     while (true) {
       const spinner = showAiGenerating();
       spinner.start('Generating commit message with AI...');
 
       try {
-        commitData = await generateCommitMessage(diff);
+        commitData = await generateCommitMessage(diff, generateOptions);
         spinner.stop('AI generation complete!');
       } catch (error) {
         spinner.stop('AI generation failed.');
@@ -61,7 +64,7 @@ async function getCommitData(flags, branchRef) {
       }
 
       // If -p flag is set, ensure the AI-chosen type is publishable
-      if (flags.publish && !PUBLISHABLE_TYPES.map(t => t.value).includes(commitData.type)) {
+      if (flags.publish && !publishableTypeValues.includes(commitData.type)) {
         p.log.warn(`Flag -p: AI selected non-publishable type "${commitData.type}". Please correct it.`);
         return await editAiSuggestion(commitData, flags);
       }

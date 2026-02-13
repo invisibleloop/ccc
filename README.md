@@ -1,4 +1,4 @@
-# CNC - Conventional Commit Creator.
+# CCC - Conventional Commit Creator
 
 An interactive CLI tool that helps developers craft perfectly structured [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) with optional AI assistance powered by Ollama.
 
@@ -16,7 +16,7 @@ An interactive CLI tool that helps developers craft perfectly structured [Conven
 
 ## Installation
 
-### Installing CNC
+### Installing CCC
 
 ```bash
 # Clone or navigate to the repository
@@ -66,7 +66,7 @@ ollama serve
 ollama pull qwen2.5-coder:latest
 ```
 
-**Note:** Ollama is completely optional. Without it, `cnc` will automatically fall back to manual mode with interactive prompts.
+**Note:** Ollama is completely optional. Without it, `ccc` will automatically fall back to manual mode with interactive prompts.
 
 ## Quick Start
 
@@ -90,25 +90,42 @@ ollama pull codellama
 
 ```bash
 git add .
-cnc
+ccc
 ```
 
 The tool will analyse your changes and suggest a commit message!
 
 ### Without AI (Manual Mode)
 
-Simply run `cnc` without Ollama, and you'll be guided through interactive prompts:
+Simply run `ccc` without Ollama, and you'll be guided through interactive prompts:
 
 ```bash
 git add .
-cnc
+ccc
 ```
 
 ## Usage
 
+### CLI Flags
+
+Flags can be combined to skip prompts and pre-configure behaviour:
+
+| Flag | Description |
+|------|-------------|
+| `-p` | Mark commit as publish-ready (restricts types to `feat`, `fix`, `perf`) |
+| `-h` | Include branch reference in the commit header automatically |
+| `-ns` | Skip the scope prompt (no scope will be used) |
+
+```bash
+ccc -p          # publish commit — only feat/fix/perf types shown
+ccc -h          # branch ref appended to header automatically
+ccc -ns         # skip scope prompt
+ccc -p -h -ns   # combine flags freely
+```
+
 ### AI-Assisted Workflow
 
-When Ollama is running, `cnc` will:
+When Ollama is running, `ccc` will:
 
 1. Detect Ollama availability
 2. Analyse your staged changes
@@ -119,18 +136,20 @@ When Ollama is running, `cnc` will:
    - **Regenerate** - Ask AI to try again
    - **Manual** - Switch to manual prompts
 
+When using the `-p` flag, if the AI selects a non-publishable type (e.g., `refactor`), you will be prompted to correct it before proceeding.
+
 ### Manual Workflow
 
 When Ollama is unavailable, or if you choose manual mode:
 
-1. Indicate if this commit will be published (filters commit types)
-2. Select commit type (feat, fix, perf for publish; all types otherwise)
-3. Enter optional scope
+1. Indicate if this commit will be published (filters commit types) — skipped if `-p` flag is set
+2. Select commit type (`feat`, `fix`, `perf` for publish; all types otherwise)
+3. Enter optional scope — skipped if `-ns` flag is set
 4. Write a short description
 5. Indicate if it's a breaking change
 6. Add breaking change description (if applicable)
 7. Add optional footer text
-8. Choose where to include branch reference (if detected)
+8. Choose where to include branch reference (if detected) — skipped if `-h` flag is set
 
 ### Branch Reference Options
 
@@ -143,10 +162,10 @@ If your branch name follows patterns like:
 The tool extracts the text after the first `/` (e.g., `ABC-123-description`, `JIRA-456`) and gives you three options:
 
 - **Don't include** - Skip the branch reference entirely
-- **In header** - Append to the commit description (e.g., `fix: resolve login bug ABC-123`)
+- **In header** - Append to the commit description (e.g., `fix: resolve login bug [ABC-123]`)
 - **In footer** - Add as a reference in the footer (e.g., `Refs #ABC-123`)
 
-This flexibility allows you to choose the best placement for your workflow and project conventions.
+Use the `-h` flag to always place the reference in the header without being prompted.
 
 ### Publish-Aware Commit Types
 
@@ -175,7 +194,7 @@ This ensures that only version-bumping commits are used when publishing packages
 ### AI-Generated Commit
 
 ```
-$ cnc
+$ ccc
 
 ◇  Conventional Commit Creator
 │
@@ -183,7 +202,7 @@ $ cnc
 │
 ┌  🤖 AI-generated commit message:
 │
-│  feat(ollama): add AI-powered commit generation
+│  feat(ollama): add AI-powered commit generation [ABC-123]
 │
 └
 
@@ -201,10 +220,29 @@ $ cnc
 │  ○ In footer
 ```
 
+### AI-Generated Commit with Flags
+
+```
+$ ccc -p -h -ns
+
+◇  Conventional Commit Creator
+│
+◆  Generating commit message with AI...
+│
+┌  🤖 AI-generated commit message:
+│
+│  feat: add stripe payment integration [ABC-123]
+│
+└
+
+◇  What would you like to do?
+│  ● Accept
+```
+
 ### Manual Commit
 
 ```
-$ cnc
+$ ccc
 
 ◇  Conventional Commit Creator
 │
@@ -286,11 +324,12 @@ This tool generates commits that comply with standard commitlint rules:
 2. **Gets staged diff** - Runs `git diff --cached`
 3. **Sends to AI** - Prompts the LLM to analyse changes (or uses manual prompts)
 4. **Parses response** - Extracts type, scope, description, and breaking change info
-5. **Prompts for branch reference placement** - Extracts branch tag and asks where to include it (header/footer/none)
-6. **Validates** - Ensures conventional commit compliance and header length
-7. **Creates commit** - Executes `git commit` with the message
+5. **Validates publish type** - If `-p` flag is set, ensures the type is publish-appropriate
+6. **Prompts for branch reference placement** - Extracts branch tag and asks where to include it (header/footer/none), or uses `-h` flag to skip the prompt
+7. **Validates** - Ensures conventional commit compliance and header length
+8. **Creates commit** - Executes `git commit` with the message
 
-For manual commits, the tool also asks about publish intent to filter available commit types.
+For manual commits, the tool also asks about publish intent to filter available commit types (unless `-p` is passed).
 
 ## Requirements
 
